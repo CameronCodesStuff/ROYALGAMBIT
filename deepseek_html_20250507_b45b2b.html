@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Royal Gambit - Strategy Card Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&display=swap');
+        
+        :root {
+            --primary: #ffd700;
+            --secondary: #c0a050;
+            --accent: #e53935;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #f5f5f5;
+            --jackpot: #ff4081;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 215, 0, 0.03) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 215, 0, 0.03) 0%, transparent 20%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            letter-spacing: 2px;
+        }
+        
+        .balance-container {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--secondary);
+            border-radius: 10px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 0 15px rgba(192, 160, 80, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .balance-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(192, 160, 80, 0.5);
+        }
+        
+        .balance-label {
+            font-size: 0.9rem;
+            color: var(--secondary);
+        }
+        
+        .balance-amount {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        
+        .jackpot-display {
+            background: linear-gradient(135deg, #ff4081, #ff9100);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 0 20px rgba(255, 64, 129, 0.5);
+            animation: pulse 2s infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .jackpot-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                transparent 45%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 55%
+            );
+            transform: rotate(30deg);
+            animation: shine 4s infinite;
+        }
+        
+        .jackpot-label {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+            color: white;
+        }
+        
+        .jackpot-amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .bet-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .bet-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--secondary);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .bet-btn:hover {
+            background: rgba(192, 160, 80, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(192, 160, 80, 0.3);
+        }
+        
+        .bet-btn.active {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+        
+        .bet-amount {
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--dark);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+        }
+        
+        .action-btn:disabled {
+            background: #555;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .game-board {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            perspective: 1000px;
+        }
+        
+        .card-slot {
+            width: 120px;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-slot.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .card {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            color: var(--light);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+        }
+        
+        .card-front {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            color: var(--light);
+        }
+        
+        .card-back {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--dark);
+            transform: rotateY(180deg);
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+        }
+        
+        .card.red {
+            color: #ff5252;
+        }
+        
+        .card.black {
+            color: var(--light);
+        }
+        
+        .game-info {
+            margin-top: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .game-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .game-rules {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .game-rules li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .game-rules li::before {
+            content: '•';
+            color: var(--primary);
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: -5px;
+        }
+        
+        .result-display {
+            text-align: center;
+            font-size: 1.5rem;
+            margin: 20px 0;
+            min-height: 40px;
+            color: var(--primary);
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s;
+        }
+        
+        .result-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .win-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .win-animation.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .win-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            margin-bottom: 30px;
+            animation: zoomInOut 2s infinite;
+        }
+        
+        .win-amount {
+            font-size: 3rem;
+            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+        
+        .new-game-btn {
+            background: var(--primary);
+            color: var(--dark);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        
+        .new-game-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shine {
+            0% { transform: rotate(30deg) translate(-30%, -30%); }
+            100% { transform: rotate(30deg) translate(30%, 30%); }
+        }
+        
+        @keyframes zoomInOut {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes cardDeal {
+            0% { transform: translateY(-100px) rotate(-10deg); opacity: 0; }
+            100% { transform: translateY(0) rotate(0); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.8rem;
+            }
+            
+            .balance-container {
+                padding: 8px 15px;
+            }
+            
+            .balance-amount {
+                font-size: 1.1rem;
+            }
+            
+            .jackpot-amount {
+                font-size: 1.8rem;
+            }
+            
+            .card-slot {
+                width: 80px;
+                height: 120px;
+            }
+            
+            .card {
+                font-size: 1.8rem;
+            }
+            
+            .win-text {
+                font-size: 3rem;
+            }
+            
+            .win-amount {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">ROYAL GAMBIT</div>
+            <div class="balance-container">
+                <div class="balance-label">BALANCE</div>
+                <div class="balance-amount">$<span id="balance">10,000</span></div>
+            </div>
+        </header>
+        
+        <div class="jackpot-display">
+            <div class="jackpot-label">Current Jackpot</div>
+            <div class="jackpot-amount">$<span id="jackpot">1,247,890</span></div>
+        </div>
+        
+        <div class="game-area">
+            <div class="bet-controls">
+                <button class="bet-btn" data-bet="100">$100</button>
+                <button class="bet-btn" data-bet="500">$500</button>
+                <button class="bet-btn active" data-bet="1000">$1,000</button>
+                <button class="bet-btn" data-bet="5000">$5,000</button>
+                <button class="bet-btn" data-bet="10000">$10,000</button>
+            </div>
+            
+            <div class="bet-amount">
+                BET: $<span id="current-bet">1,000</span>
+            </div>
+            
+            <button id="deal-btn" class="action-btn">DEAL CARDS</button>
+            
+            <div class="result-display" id="result"></div>
+            
+            <div class="game-board" id="game-board">
+                <!-- Cards will be inserted here by JavaScript -->
+            </div>
+            
+            <div class="game-info">
+                <h2 class="game-title">How to Play Royal Gambit</h2>
+                <ul class="game-rules">
+                    <li>Place your bet and deal 5 cards</li>
+                    <li>You must select 3 cards to keep and 2 to discard</li>
+                    <li>The game will replace your discarded cards</li>
+                    <li>Your final hand determines your payout:</li>
+                    <li><strong>Royal Sequence</strong> (A-K-Q-J-10 same suit): 1000x + Jackpot</li>
+                    <li><strong>Imperial Flush</strong> (5-card straight flush): 200x</li>
+                    <li><strong>Royal Triad</strong> (3 of a kind with face cards): 50x</li>
+                    <li><strong>Noble Pair</strong> (Pair of face cards): 5x</li>
+                    <li><strong>Common Hand</strong>: Lose your bet</li>
+                </ul>
+                <p>The more you bet, the higher your chance to trigger the jackpot!</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="win-animation" id="win-animation">
+        <div class="win-text">YOU WIN!</div>
+        <div class="win-amount">$<span id="win-amount">0</span></div>
+        <button class="new-game-btn" id="new-game-btn">NEW GAME</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game state
+            const state = {
+                balance: 10000,
+                currentBet: 1000,
+                jackpot: 1247890,
+                cards: [],
+                selectedCards: [],
+                gameStage: 'betting', // 'betting', 'dealt', 'selecting', 'revealed'
+                suits: ['♠', '♥', '♦', '♣'],
+                values: ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'],
+                faceCards: ['J', 'Q', 'K', 'A']
+            };
+            
+            // DOM elements
+            const balanceEl = document.getElementById('balance');
+            const jackpotEl = document.getElementById('jackpot');
+            const currentBetEl = document.getElementById('current-bet');
+            const betButtons = document.querySelectorAll('.bet-btn');
+            const dealBtn = document.getElementById('deal-btn');
+            const gameBoard = document.getElementById('game-board');
+            const resultEl = document.getElementById('result');
+            const winAnimation = document.getElementById('win-animation');
+            const winAmountEl = document.getElementById('win-amount');
+            const newGameBtn = document.getElementById('new-game-btn');
+            
+            // Initialize game
+            updateDisplay();
+            
+            // Event listeners
+            betButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (state.gameStage !== 'betting') return;
+                    
+                    betButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    state.currentBet = parseInt(this.dataset.bet);
+                    updateDisplay();
+                });
+            });
+            
+            dealBtn.addEventListener('click', function() {
+                if (state.gameStage === 'betting') {
+                    if (state.balance < state.currentBet) {
+                        showResult("Insufficient balance!");
+                        return;
+                    }
+                    
+                    state.balance -= state.currentBet;
+                    state.jackpot += Math.floor(state.currentBet * 0.1);
+                    dealCards();
+                    state.gameStage = 'dealt';
+                    dealBtn.textContent = 'DISCARD & DRAW';
+                    dealBtn.disabled = true;
+                } else if (state.gameStage === 'dealt') {
+                    if (state.selectedCards.length !== 2) {
+                        showResult("Please select 2 cards to discard!");
+                        return;
+                    }
+                    
+                    replaceCards();
+                    state.gameStage = 'revealed';
+                    dealBtn.textContent = 'NEW GAME';
+                    evaluateHand();
+                } else if (state.gameStage === 'revealed') {
+                    resetGame();
+                }
+                
+                updateDisplay();
+            });
+            
+            newGameBtn.addEventListener('click', function() {
+                resetGame();
+                winAnimation.classList.remove('active');
+                updateDisplay();
+            });
+            
+            // Game functions
+            function dealCards() {
+                gameBoard.innerHTML = '';
+                state.cards = [];
+                state.selectedCards = [];
+                
+                // Create a full deck
+                let deck = [];
+                for (let suit of state.suits) {
+                    for (let value of state.values) {
+                        deck.push({ suit, value });
+                    }
+                }
+                
+                // Shuffle deck
+                deck = shuffleDeck(deck);
+                
+                // Deal 5 cards
+                state.cards = deck.slice(0, 5);
+                
+                // Display cards
+                state.cards.forEach((card, index) => {
+                    const cardSlot = document.createElement('div');
+                    cardSlot.className = 'card-slot';
+                    cardSlot.dataset.index = index;
+                    
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'card';
+                    cardEl.dataset.index = index;
+                    
+                    const cardFront = document.createElement('div');
+                    cardFront.className = 'card-face card-front';
+                    
+                    const cardBack = document.createElement('div');
+                    cardBack.className = 'card-face card-back';
+                    cardBack.textContent = 'RG';
+                    
+                    cardEl.appendChild(cardFront);
+                    cardEl.appendChild(cardBack);
+                    cardSlot.appendChild(cardEl);
+                    gameBoard.appendChild(cardSlot);
+                    
+                    // Animate card dealing
+                    setTimeout(() => {
+                        cardSlot.style.animation = 'cardDeal 0.5s ease-out forwards';
+                    }, index * 150);
+                    
+                    // Add click event for card selection
+                    cardEl.addEventListener('click', function() {
+                        if (state.gameStage !== 'dealt') return;
+                        
+                        const index = parseInt(this.dataset.index);
+                        toggleCardSelection(index);
+                    });
+                });
+                
+                // Flip cards after animation
+                setTimeout(() => {
+                    document.querySelectorAll('.card').forEach(card => {
+                        card.classList.add('flipped');
+                        
+                        const index = parseInt(card.dataset.index);
+                        const cardData = state.cards[index];
+                        const cardFront = card.querySelector('.card-front');
+                        
+                        cardFront.textContent = cardData.value + cardData.suit;
+                        cardFront.classList.add(cardData.suit === '♥' || cardData.suit === '♦' ? 'red' : 'black');
+                    });
+                    
+                    // Enable discard button after all cards are revealed
+                    setTimeout(() => {
+                        dealBtn.disabled = false;
+                    }, 500);
+                }, 1000);
+            }
+            
+            function toggleCardSelection(index) {
+                const cardEl = document.querySelector(`.card[data-index="${index}"]`);
+                const cardSlot = document.querySelector(`.card-slot[data-index="${index}"]`);
+                
+                if (state.selectedCards.includes(index)) {
+                    // Deselect card
+                    state.selectedCards = state.selectedCards.filter(i => i !== index);
+                    cardSlot.classList.remove('active');
+                } else {
+                    // Select card (max 2)
+                    if (state.selectedCards.length >= 2) return;
+                    state.selectedCards.push(index);
+                    cardSlot.classList.add('active');
+                }
+                
+                // Enable/disable deal button based on selection
+                dealBtn.disabled = state.selectedCards.length !== 2;
+            }
+            
+            function replaceCards() {
+                // Create a new deck excluding dealt cards
+                let deck = [];
+                for (let suit of state.suits) {
+                    for (let value of state.values) {
+                        deck.push({ suit, value });
+                    }
+                }
+                
+                // Remove currently dealt cards
+                deck = deck.filter(card => {
+                    return !state.cards.some(c => 
+                        c.suit === card.suit && c.value === card.value
+                    );
+                });
+                
+                // Shuffle remaining deck
+                deck = shuffleDeck(deck);
+                
+                // Replace selected cards
+                state.selectedCards.forEach((index, i) => {
+                    state.cards[index] = deck[i];
+                    
+                    // Update card display
+                    const cardEl = document.querySelector(`.card[data-index="${index}"]`);
+                    const cardFront = cardEl.querySelector('.card-front');
+                    
+                    // Flip animation
+                    cardEl.classList.remove('flipped');
+                    
+                    setTimeout(() => {
+                        const cardData = state.cards[index];
+                        cardFront.textContent = cardData.value + cardData.suit;
+                        cardFront.className = 'card-face card-front';
+                        cardFront.classList.add(cardData.suit === '♥' || cardData.suit === '♦' ? 'red' : 'black');
+                        
+                        cardEl.classList.add('flipped');
+                    }, 500);
+                });
+            }
+            
+            function evaluateHand() {
+                // Sort cards by value
+                const sortedCards = [...state.cards].sort((a, b) => {
+                    return state.values.indexOf(a.value) - state.values.indexOf(b.value);
+                });
+                
+                // Check for Royal Sequence (A-K-Q-J-10 same suit)
+                const isRoyalSequence = () => {
+                    const requiredValues = ['10', 'J', 'Q', 'K', 'A'];
+                    const suit = sortedCards[0].suit;
+                    
+                    return sortedCards.every(card => 
+                        requiredValues.includes(card.value) && card.suit === suit
+                    );
+                };
+                
+                // Check for Imperial Flush (5-card straight flush)
+                const isImperialFlush = () => {
+                    const suit = sortedCards[0].suit;
+                    const values = sortedCards.map(card => state.values.indexOf(card.value));
+                    
+                    // Check if all same suit
+                    if (!sortedCards.every(card => card.suit === suit)) return false;
+                    
+                    // Check if sequential
+                    for (let i = 1; i < values.length; i++) {
+                        if (values[i] !== values[i-1] + 1) return false;
+                    }
+                    
+                    return true;
+                };
+                
+                // Check for Royal Triad (3 of a kind with face cards)
+                const isRoyalTriad = () => {
+                    const faceCardsCount = {};
+                    
+                    sortedCards.forEach(card => {
+                        if (state.faceCards.includes(card.value)) {
+                            faceCardsCount[card.value] = (faceCardsCount[card.value] || 0) + 1;
+                        }
+                    });
+                    
+                    return Object.values(faceCardsCount).some(count => count >= 3);
+                };
+                
+                // Check for Noble Pair (Pair of face cards)
+                const isNoblePair = () => {
+                    const faceCardsCount = {};
+                    let pairCount = 0;
+                    
+                    sortedCards.forEach(card => {
+                        if (state.faceCards.includes(card.value)) {
+                            faceCardsCount[card.value] = (faceCardsCount[card.value] || 0) + 1;
+                        }
+                    });
+                    
+                    for (let count of Object.values(faceCardsCount)) {
+                        if (count >= 2) pairCount++;
+                    }
+                    
+                    return pairCount >= 1;
+                };
+                
+                // Determine win
+                let multiplier = 0;
+                let winMessage = '';
+                
+                if (isRoyalSequence()) {
+                    multiplier = 1000;
+                    winMessage = 'ROYAL SEQUENCE!';
+                    state.jackpot = 0;
+                } else if (isImperialFlush()) {
+                    multiplier = 200;
+                    winMessage = 'IMPERIAL FLUSH!';
+                } else if (isRoyalTriad()) {
+                    multiplier = 50;
+                    winMessage = 'ROYAL TRIAD!';
+                } else if (isNoblePair()) {
+                    multiplier = 5;
+                    winMessage = 'NOBLE PAIR!';
+                } else {
+                    winMessage = 'Better luck next time!';
+                }
+                
+                const winnings = state.currentBet * multiplier;
+                if (winnings > 0) {
+                    state.balance += winnings;
+                    showResult(`You won ${winMessage} ${multiplier}x = $${winnings.toLocaleString()}`);
+                    
+                    if (multiplier === 1000) {
+                        showWinAnimation(winnings + state.jackpot);
+                    } else if (winnings >= state.currentBet * 50) {
+                        showWinAnimation(winnings);
+                    }
+                } else {
+                    showResult(winMessage);
+                }
+            }
+            
+            function showResult(message) {
+                resultEl.textContent = message;
+                resultEl.classList.add('show');
+                
+                setTimeout(() => {
+                    resultEl.classList.remove('show');
+                }, 3000);
+            }
+            
+            function showWinAnimation(amount) {
+                winAmountEl.textContent = amount.toLocaleString();
+                winAnimation.classList.add('active');
+                createConfetti();
+            }
+            
+            function createConfetti() {
+                const colors = ['#ffd700', '#ff4081', '#4caf50', '#2196f3', '#ff9800'];
+                
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.opacity = Math.random() * 0.7 + 0.3;
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    
+                    document.body.appendChild(confetti);
+                    
+                    const animationDuration = Math.random() * 3 + 2;
+                    
+                    confetti.style.animation = `
+                        ${animationDuration}s ease-out ${Math.random() * 2}s 1 normal forwards confettiDrop
+                    `;
+                    
+                    // Create keyframes dynamically
+                    const keyframes = `
+                        @keyframes confettiDrop {
+                            0% {
+                                transform: translateY(-100vh) rotate(0deg);
+                                opacity: 1;
+                            }
+                            100% {
+                                transform: translateY(100vh) rotate(${Math.random() * 360}deg);
+                                opacity: 0;
+                            }
+                        }
+                    `;
+                    
+                    const styleEl = document.createElement('style');
+                    styleEl.innerHTML = keyframes;
+                    document.head.appendChild(styleEl);
+                    
+                    // Remove confetti after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                        styleEl.remove();
+                    }, animationDuration * 1000 + 2000);
+                }
+            }
+            
+            function resetGame() {
+                state.gameStage = 'betting';
+                state.selectedCards = [];
+                dealBtn.textContent = 'DEAL CARDS';
+                dealBtn.disabled = false;
+                gameBoard.innerHTML = '';
+                resultEl.textContent = '';
+                resultEl.classList.remove('show');
+                
+                // Reset card selections
+                document.querySelectorAll('.card-slot').forEach(slot => {
+                    slot.classList.remove('active');
+                });
+            }
+            
+            function updateDisplay() {
+                balanceEl.textContent = state.balance.toLocaleString();
+                jackpotEl.textContent = state.jackpot.toLocaleString();
+                currentBetEl.textContent = state.currentBet.toLocaleString();
+            }
+            
+            function shuffleDeck(deck) {
+                for (let i = deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [deck[i], deck[j]] = [deck[j], deck[i]];
+                }
+                return deck;
+            }
+        });
+    </script>
+</body>
+</html>
